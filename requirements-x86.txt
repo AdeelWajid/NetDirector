@@ -1,0 +1,5 @@
+# Legacy 32-bit Windows build; requires CPython 3.10 x86.
+PySide2==5.15.2.1
+shiboken2==5.15.2.1
+# Last psutil series with published win32 wheels.
+psutil==7.0.0

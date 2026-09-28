@@ -1,0 +1,119 @@
+name: Windows builds and releases
+
+on:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+jobs:
+  build:
+    name: Windows ${{ matrix.architecture }}
+    runs-on: windows-2022
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: x64
+            python: '3.12'
+          - architecture: x86
+            python: '3.10'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: ${{ matrix.python }}
+          architecture: ${{ matrix.architecture }}
+          cache: pip
+          cache-dependency-path: |
+            requirements-${{ matrix.architecture }}.txt
+            requirements-build.txt
+      - name: Install runtime and build tooling
+        env:
+          BUILD_ARCH: ${{ matrix.architecture }}
+        run: |
+          python -m pip install --upgrade pip
+          if ($LASTEXITCODE -ne 0) { throw 'pip upgrade failed' }
+          python -m pip install --only-binary=:all: -r "requirements-$env:BUILD_ARCH.txt" -r requirements-build.txt
+          if ($LASTEXITCODE -ne 0) { throw 'Dependency installation failed' }
+      - name: Test and build
+        env:
+          BUILD_ARCH: ${{ matrix.architecture }}
+          RELEASE_TAG: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
+        run: ./scripts/build.ps1 -Architecture $env:BUILD_ARCH -Tag $env:RELEASE_TAG
+      - name: Smoke-test packaged application
+        env:
+          BUILD_ARCH: ${{ matrix.architecture }}
+          QT_QPA_PLATFORM: windows
+        run: ./scripts/smoke_package.ps1 -Executable "dist/$env:BUILD_ARCH/NetDirector/NetDirector.exe"
+      - name: Verify architecture and create release ZIP
+        env:
+          BUILD_ARCH: ${{ matrix.architecture }}
+          RELEASE_TAG: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
+        run: |
+          $packageArguments = @('--architecture', $env:BUILD_ARCH)
+          if ($env:RELEASE_TAG) { $packageArguments += @('--tag', $env:RELEASE_TAG) }
+          python scripts/package_release.py @packageArguments
+          if ($LASTEXITCODE -ne 0) { throw 'Release packaging failed' }
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: windows-${{ matrix.architecture }}
+          path: |
+            release/*.zip
+            release/*.sha256
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+
+  release:
+    name: Publish tagged release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v') && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: windows-*
+          path: release
+          merge-multiple: true
+      - name: Verify and publish packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd release
+          test "$(find . -maxdepth 1 -name '*.zip' | wc -l)" -eq 2
+          test "$(find . -maxdepth 1 -name '*.sha256' | wc -l)" -eq 2
+          sha256sum --check ./*.sha256
+          cat > notes.md <<'NOTES'
+          Download x64 for 64-bit Windows (recommended). The x86 package is a legacy 32-bit build using Python 3.10 and PySide2/Qt 5.
+
+          Extract the entire ZIP and run NetDirector.exe. Keep the _internal directory beside it. Python is included; ForceBindIP must be installed separately.
+
+          SHA256 checksums, dependency versions, and third-party license notices are included. Packages are unsigned. Child-process monitoring does not guarantee child-process binding.
+          NOTES
+          if gh release view "$RELEASE_TAG" --repo "$GH_REPO" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" ./*.zip ./*.sha256 --repo "$GH_REPO" --clobber
+          else
+            gh release create "$RELEASE_TAG" ./*.zip ./*.sha256 --repo "$GH_REPO" --verify-tag --title "NetDirector $RELEASE_TAG" --notes-file notes.md
+          fi

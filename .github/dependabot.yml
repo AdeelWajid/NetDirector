@@ -1,0 +1,14 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: monthly
+    # The legacy Qt 5 runtime must remain compatible with Python 3.10 x86.
+    ignore:
+      - dependency-name: PySide2
+      - dependency-name: shiboken2

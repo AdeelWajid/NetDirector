@@ -1,0 +1,50 @@
+# Python environments and tooling
+.venv*/
+venv/
+env/
+.build-tools/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+.mypy_cache/
+.ruff_cache/
+.coverage*
+htmlcov/
+*.egg-info/
+
+# Generated application packages; distribute these via GitHub Releases
+build/
+dist/
+release/
+*.spec
+*.exe
+*.dll
+*.pyd
+*.zip
+*.nupkg
+
+# Local settings, profiles, diagnostics and screenshots
+data/
+logs/
+*.log
+*.tmp
+*.lock
+.smoke-data/
+.packaged-smoke*/
+docs/local-screenshots/
+docs/VERIFICATION.md
+assets/README.md
+
+# Credentials, signing keys, and machine/editor files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+Desktop.ini
