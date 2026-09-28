@@ -157,33 +157,59 @@ class DashboardPage(QWidget):
         self.refresh()
 
     def refresh(self):
-        controller = self.window.controller
-        profile = self.window.current_profile()
-        available = [a for a in controller.adapters if a.available] if controller.ready else []
-        values = [len(available), len(profile.rules) if profile else 0,
-                  sum(bool(s["pids"]) for s in controller.sessions.values())]
-        for widget, value in zip(self.values, values):
-            widget.setText(str(value))
-        self.overview_footer.setText("●  Adapters refreshed · Ready when you are" if controller.ready else "Waiting for successful adapter discovery")
-        # Aggregate only the displayed available interfaces; do not substitute sample data.
-        counters = [controller.traffic.get(a.identity.name, {}) for a in available]
-        for gauge, key in zip(self.gauges, ("down", "up")):
-            measured = [c[key] for c in counters if c.get(key) is not None]
-            gauge.set_value(sum(measured) if measured else None)
-        sampled = sum(c.get("down") is not None for c in counters)
-        self.traffic_caption.setText(f"LIVE TRAFFIC  ·  {sampled} interfaces sampled" if sampled else "LIVE TRAFFIC  ·  Waiting for counter samples")
-        active = bool(profile and controller.active_profile == profile.id)
-        self.profile_name.setText(profile.name if profile else "No profile")
-        self.profile_name.setToolTip(profile.name if profile else "Create a profile")
-        waiting = sum(r.id in controller.pending for r in profile.rules) if profile else 0
-        self.profile_detail.setText(f"{len(profile.rules) if profile else 0} rules · {waiting} waiting" if waiting else f"{len(profile.rules) if profile else 0} rules · {'Active' if active else 'Inactive'}")
-        self.profile_toggle.setChecked(active)
-        self.profile_toggle.setText("Active  ●" if active else "Inactive  ○")
-        self.profile_toggle.setEnabled(controller.ready and profile is not None)
-        for i, (name, address) in enumerate(self.connection_labels):
-            adapter = available[i] if i < len(available) else None
-            name.setText("●  " + adapter.identity.name if adapter else ("No connection" if i == 0 else ""))
-            address.setText(adapter.ip if adapter else "")
-            name.setVisible(adapter is not None or i == 0)
-            address.setVisible(adapter is not None)
-        self.extra_networks.setText(f"+ {len(available)-2} more available" if len(available) > 2 else "Current addresses · Auto-resolved")
+        self.setUpdatesEnabled(False)
+        try:
+            controller = self.window.controller
+            profile = self.window.current_profile()
+            available = [a for a in controller.adapters if a.available] if controller.ready else []
+            values = [len(available), len(profile.rules) if profile else 0,
+                      sum(bool(s["pids"]) for s in controller.sessions.values())]
+            for widget, value in zip(self.values, values):
+                val_str = str(value)
+                if widget.text() != val_str:
+                    widget.setText(val_str)
+            footer_text = "●  Adapters refreshed · Ready when you are" if controller.ready else "Waiting for successful adapter discovery"
+            if self.overview_footer.text() != footer_text:
+                self.overview_footer.setText(footer_text)
+            counters = [controller.traffic.get(a.identity.name, {}) for a in available]
+            for gauge, key in zip(self.gauges, ("down", "up")):
+                measured = [c[key] for c in counters if c.get(key) is not None]
+                gauge.set_value(sum(measured) if measured else None)
+            sampled = sum(c.get("down") is not None for c in counters)
+            caption = f"LIVE TRAFFIC  ·  {sampled} interfaces sampled" if sampled else "LIVE TRAFFIC  ·  Waiting for counter samples"
+            if self.traffic_caption.text() != caption:
+                self.traffic_caption.setText(caption)
+            active = bool(profile and controller.active_profile == profile.id)
+            prof_name = profile.name if profile else "No profile"
+            if self.profile_name.text() != prof_name:
+                self.profile_name.setText(prof_name)
+                self.profile_name.setToolTip(prof_name)
+            waiting = sum(r.id in controller.pending for r in profile.rules) if profile else 0
+            detail = f"{len(profile.rules) if profile else 0} rules · {waiting} waiting" if waiting else f"{len(profile.rules) if profile else 0} rules · {'Active' if active else 'Inactive'}"
+            if self.profile_detail.text() != detail:
+                self.profile_detail.setText(detail)
+            if self.profile_toggle.isChecked() != active:
+                self.profile_toggle.setChecked(active)
+            toggle_text = "Active  ●" if active else "Inactive  ○"
+            if self.profile_toggle.text() != toggle_text:
+                self.profile_toggle.setText(toggle_text)
+            self.profile_toggle.setEnabled(controller.ready and profile is not None)
+            for i, (name, address) in enumerate(self.connection_labels):
+                adapter = available[i] if i < len(available) else None
+                name_text = "●  " + adapter.identity.name if adapter else ("No connection" if i == 0 else "")
+                addr_text = adapter.ip if adapter else ""
+                if name.text() != name_text:
+                    name.setText(name_text)
+                if address.text() != addr_text:
+                    address.setText(addr_text)
+                is_vis = adapter is not None or i == 0
+                if name.isVisible() != is_vis:
+                    name.setVisible(is_vis)
+                addr_vis = adapter is not None
+                if address.isVisible() != addr_vis:
+                    address.setVisible(addr_vis)
+            extra = f"+ {len(available)-2} more available" if len(available) > 2 else "Current addresses · Auto-resolved"
+            if self.extra_networks.text() != extra:
+                self.extra_networks.setText(extra)
+        finally:
+            self.setUpdatesEnabled(True)

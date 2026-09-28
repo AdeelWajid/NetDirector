@@ -73,44 +73,52 @@ class Controller(QObject):
         self.timer.setInterval(self.settings["refresh_seconds"] * 1000)
         self.timer.start() if self.settings["auto_refresh"] else self.timer.stop()
 
-    def submit(self, operation, callback):
-        self.queue.append((operation, callback))
+    def submit(self, operation, callback, busy=True):
+        self.queue.append((operation, callback, busy))
         self.next_job()
 
     def next_job(self):
         if self.busy or not self.queue:
             return
-        operation, callback = self.queue.popleft()
-        self.busy = True
-        self.busy_changed.emit(True)
+        operation, callback, busy = self.queue.popleft()
+        if busy:
+            self.busy = True
+            self.busy_changed.emit(True)
         self.worker = Worker(operation)
-        self.worker.signals.finished.connect(lambda result, error: self.job_finished(callback, result, error))
+        self.worker.signals.finished.connect(lambda result, error: self.job_finished(callback, result, error, busy))
         self.pool.start(self.worker)
 
-    def job_finished(self, callback, result, error):
-        self.busy = False
+    def job_finished(self, callback, result, error, busy):
+        if busy:
+            self.busy = False
         try:
             callback(result, error)
         except Exception as exc:
             logging.getLogger("netdirector").exception("Could not apply operation result")
             self.error.emit(str(exc))
-        self.busy_changed.emit(self.busy or bool(self.queue))
+        if busy:
+            has_busy = any(b for _, _, b in self.queue)
+            self.busy_changed.emit(self.busy or has_busy)
         self.next_job()
 
     def log(self, message):
         logging.getLogger("netdirector").info(message)
         self.notice.emit(message)
 
-    def refresh(self):
+    def refresh(self, silent=False):
         if self.busy:
-            self.notice.emit("An operation is in progress; adapters will refresh shortly.")
+            if not silent:
+                self.notice.emit("An operation is in progress; adapters will refresh shortly.")
             return
-        self.log("Adapter discovery started")
+        if not silent:
+            self.log("Adapter discovery started")
+        else:
+            logging.getLogger("netdirector").info("Periodic adapter discovery started")
         self.submit(self.manager.refresh, self.refreshed)
 
     def periodic_refresh(self):
         if not self.busy and not self.queue:
-            self.refresh()
+            self.refresh(silent=True)
 
     def refreshed(self, adapters, error):
         if error:
@@ -215,7 +223,7 @@ class Controller(QObject):
             if not error:
                 self.traffic, self.sessions = result
                 self.changed.emit()
-        self.submit(operation, completed)
+        self.submit(operation, completed, busy=False)
 
     def diagnose(self, rule):
         snapshot = copy.deepcopy(rule)

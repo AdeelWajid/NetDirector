@@ -44,11 +44,25 @@ def table(headers):
 
 def set_rows(widget, rows):
     selected = widget.currentRow()
-    widget.setRowCount(len(rows))
-    for i, row in enumerate(rows):
-        for j, text in enumerate(row):
-            item = QTableWidgetItem(str(text))
-            item.setToolTip(str(text))
-            widget.setItem(i, j, item)
-    if 0 <= selected < len(rows):
-        widget.selectRow(selected)
+    widget.setUpdatesEnabled(False)
+    try:
+        if widget.rowCount() != len(rows):
+            widget.setRowCount(len(rows))
+        for i, row in enumerate(rows):
+            for j, text in enumerate(row):
+                text_str = str(text)
+                item = widget.item(i, j)
+                if item is None:
+                    item = QTableWidgetItem(text_str)
+                    item.setToolTip(text_str)
+                    widget.setItem(i, j, item)
+                else:
+                    if item.text() != text_str:
+                        item.setText(text_str)
+                    if item.toolTip() != text_str:
+                        item.setToolTip(text_str)
+        if 0 <= selected < len(rows):
+            if widget.currentRow() != selected:
+                widget.selectRow(selected)
+    finally:
+        widget.setUpdatesEnabled(True)

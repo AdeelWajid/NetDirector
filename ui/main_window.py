@@ -92,8 +92,9 @@ class MainWindow(QMainWindow):
         self.progress = QProgressBar()
         self.progress.setRange(0, 0)
         self.progress.setTextVisible(False)
+        self.progress.setFixedSize(140, 10)
         self.progress.hide()
-        body.addWidget(self.progress)
+        self.statusBar().addPermanentWidget(self.progress)
         self.banner = label("", "pill")
         self.banner.hide()
         body.addWidget(self.banner)
@@ -180,9 +181,9 @@ class MainWindow(QMainWindow):
     def refresh(self):
         if not hasattr(self, "pages"):
             return
-        for page in self.pages:
-            if hasattr(page, "refresh"):
-                page.refresh()
+        current = self.stack.currentWidget()
+        if current and hasattr(current, "refresh"):
+            current.refresh()
         self.connection_badge.setText(f"●  {sum(a.available for a in self.controller.adapters)} networks available" if self.controller.ready else "Discovery not ready")
         if hasattr(self, "tray_profile"):
             active = next((p.name for p in self.profiles if p.id == self.controller.active_profile), "None")
