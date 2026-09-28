@@ -62,7 +62,7 @@ PySide6 does not provide win32 wheels. psutil 7.0.0 is pinned for its published 
 - The release job runs only for version tags, after both matrix jobs succeed, and has `contents: write`.
 - Third-party action code is pinned to commit SHAs; Dependabot proposes updates.
 - No `pull_request_target` or execution of fork code with publishing permissions is used.
-- There is no signing certificate, installer, or ForceBindIP binary in the packages.
+- Builds are unsigned. The release builds provide both portable ZIPs and Inno Setup Windows installers with ForceBindIP bundled.
 
 ## Public screenshots
 

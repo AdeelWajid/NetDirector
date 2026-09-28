@@ -69,11 +69,19 @@ jobs:
           if ($env:RELEASE_TAG) { $packageArguments += @('--tag', $env:RELEASE_TAG) }
           python scripts/package_release.py @packageArguments
           if ($LASTEXITCODE -ne 0) { throw 'Release packaging failed' }
+      - name: Build Windows setup installer
+        env:
+          BUILD_ARCH: ${{ matrix.architecture }}
+          RELEASE_TAG: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
+        run: |
+          $ver = if ($env:RELEASE_TAG) { $env:RELEASE_TAG.TrimStart('v') } else { '' }
+          ./scripts/build_installer.ps1 -Architecture $env:BUILD_ARCH -Version $ver
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: windows-${{ matrix.architecture }}
           path: |
             release/*.zip
+            release/*-Setup.exe
             release/*.sha256
           if-no-files-found: error
           compression-level: 0
@@ -103,17 +111,20 @@ jobs:
           set -euo pipefail
           cd release
           test "$(find . -maxdepth 1 -name '*.zip' | wc -l)" -eq 2
-          test "$(find . -maxdepth 1 -name '*.sha256' | wc -l)" -eq 2
+          test "$(find . -maxdepth 1 -name '*.sha256' | wc -l)" -ge 2
           sha256sum --check ./*.sha256
           cat > notes.md <<'NOTES'
-          Download x64 for 64-bit Windows (recommended). The x86 package is a legacy 32-bit build using Python 3.10 and PySide2/Qt 5.
+          ### Installation Options
 
-          Extract the entire ZIP and run NetDirector.exe. Keep the _internal directory beside it. Python is included; ForceBindIP must be installed separately.
+          - **Installer (Recommended):** Download and run `NetDirector-<version>-windows-x64-Setup.exe` (or x86 for 32-bit systems). The installer sets up NetDirector and bundles ForceBindIP automatically.
+          - **Portable ZIP:** Extract the entire ZIP and run `NetDirector.exe`. Keep the `_internal` directory beside it. ForceBindIP is bundled in the `ForceBindIP/` folder.
 
           SHA256 checksums, dependency versions, and third-party license notices are included. Packages are unsigned. Child-process monitoring does not guarantee child-process binding.
           NOTES
+          shopt -s nullglob
+          assets=( *.zip *-Setup.exe *.sha256 )
           if gh release view "$RELEASE_TAG" --repo "$GH_REPO" >/dev/null 2>&1; then
-            gh release upload "$RELEASE_TAG" ./*.zip ./*.sha256 --repo "$GH_REPO" --clobber
+            gh release upload "$RELEASE_TAG" "${assets[@]}" --repo "$GH_REPO" --clobber
           else
-            gh release create "$RELEASE_TAG" ./*.zip ./*.sha256 --repo "$GH_REPO" --verify-tag --title "NetDirector $RELEASE_TAG" --notes-file notes.md
+            gh release create "$RELEASE_TAG" "${assets[@]}" --repo "$GH_REPO" --verify-tag --title "NetDirector $RELEASE_TAG" --notes-file notes.md
           fi

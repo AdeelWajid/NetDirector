@@ -20,6 +20,6 @@ and PySide/Shiboken source from [Qt for Python](https://code.qt.io/cgit/pyside/p
 For an offline redistribution, provide the corresponding source and notices as
 required by the licenses applicable to your distribution.
 
-ForceBindIP is an optional separately installed application. Its binaries are
-**not included** in the repository or release ZIPs. Obtain it from its
-[author](https://r1ch.net/projects/forcebindip) under the author's terms.
+ForceBindIP is freeware by Richard Stanway. Its binaries are fetched directly
+from the [author's site](https://r1ch.net/projects/forcebindip) and bundled in
+installers and packages under the author's freeware distribution terms.

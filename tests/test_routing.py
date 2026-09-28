@@ -70,3 +70,9 @@ def test_failed_scan_never_launches_even_with_default_fallback(rule):
     service = RoutingService(AdapterManager(fail), Recorder(), default_launcher=lambda _: pytest.fail("launched"))
     with pytest.raises(RuntimeError, match="scan failed"):
         service.launch(rule)
+
+
+def test_detect_directories():
+    from bindings.forcebind_engine import detect_directories
+    dirs = detect_directories()
+    assert len(dirs) > 0

@@ -3,6 +3,7 @@ from pathlib import Path
 import shutil
 import struct
 import subprocess
+import sys
 import time
 import ipaddress
 from bindings.base_engine import BindingEngine, LaunchResult, argument_tokens
@@ -25,6 +26,10 @@ def executable_architecture(executable):
 
 def detect_directories():
     candidates = []
+    app_root = Path(getattr(sys, "_MEIPASS", sys.executable)).resolve().parent
+    project_root = Path(__file__).resolve().parents[1]
+    for base in (app_root, project_root):
+        candidates.extend([base, base / "ForceBindIP", base / "build" / "ForceBindIP"])
     for exe in ("ForceBindIP.exe", "ForceBindIP64.exe"):
         located = shutil.which(exe)
         if located:

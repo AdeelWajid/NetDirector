@@ -19,19 +19,20 @@ Save a setup such as **Steam → Wi-Fi**, **Discord → Ethernet**, and **anothe
 
 ## Download
 
-Open [GitHub Releases](../../releases/latest) and download the ZIP matching your Windows installation:
+Open [GitHub Releases](../../releases/latest) and download the installer or ZIP matching your Windows installation:
 
-| Package | Use it for | Runtime |
+| Package | Use it for | Details |
 |---|---|---|
-| `NetDirector-VERSION-windows-x64.zip` | **Recommended:** 64-bit Windows 10 / 11 | Python 3.12 + PySide6 / Qt 6 |
-| `NetDirector-VERSION-windows-x86.zip` | Legacy 32-bit Windows 10 | Python 3.10 + PySide2 / Qt 5 |
+| `NetDirector-VERSION-windows-x64-Setup.exe` | **Recommended:** 64-bit Windows 10 / 11 | Windows setup installer (includes ForceBindIP) |
+| `NetDirector-VERSION-windows-x64.zip` | Portable 64-bit Windows | Standalone folder (includes ForceBindIP) |
+| `NetDirector-VERSION-windows-x86-Setup.exe` | Legacy 32-bit Windows | Windows setup installer (includes ForceBindIP) |
+| `NetDirector-VERSION-windows-x86.zip` | Portable legacy 32-bit Windows | Standalone folder (includes ForceBindIP) |
 
-1. Extract the **entire** ZIP into a folder.
-2. Run **NetDirector.exe**. Keep the `_internal` folder beside it.
-3. Wait for network discovery, then add an application and select a network.
-4. Install [ForceBindIP](https://r1ch.net/projects/forcebindip) separately to launch applications through a selected adapter. Windows-default launches do not need it.
+### Installation:
+- **Installer (Recommended):** Run the `*-Setup.exe` wizard. It installs NetDirector, creates desktop/start menu shortcuts, and installs ForceBindIP so adapter routing works out of the box.
+- **Portable ZIP:** Extract the entire ZIP into a folder and run **NetDirector.exe** (keep `_internal` and `ForceBindIP` beside it).
 
-Python is included in release packages. Builds are unsigned. Each release provides SHA256 checksums; verify a download with `Get-FileHash .\NetDirector-*-windows-x64.zip -Algorithm SHA256`.
+Python and ForceBindIP binaries are included. Builds are unsigned. Each release provides SHA256 checksums; verify a download with `Get-FileHash .\NetDirector-*-windows-x64-Setup.exe -Algorithm SHA256`.
 
 **Architecture matters:** x86 refers to the NetDirector application itself, not the applications it can launch. The x64 package already selects the correct ForceBindIP loader for both x86 and x64 targets. PySide6 has [no 32-bit Windows distribution](https://wiki.qt.io/PySide), so the x86 package uses a legacy Qt 5 compatibility layer. Prefer x64 whenever possible; the x86 package relies on older runtime components and does not promise Windows 7 support.
 

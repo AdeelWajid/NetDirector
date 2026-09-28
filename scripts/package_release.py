@@ -69,6 +69,9 @@ def main():
         shutil.copyfile(ROOT / filename, source / filename)
     shutil.copytree(ROOT / "docs" / "screenshots", source / "docs" / "screenshots", dirs_exist_ok=True)
     shutil.copyfile(ROOT / "docs" / "USER_GUIDE.md", source / "docs" / "USER_GUIDE.md")
+    forcebind_dir = ROOT / "build" / "ForceBindIP"
+    if forcebind_dir.is_dir():
+        shutil.copytree(forcebind_dir, source / "ForceBindIP", dirs_exist_ok=True)
     components = collect_notices(source, architecture)
     (source / "BUILD_INFO.json").write_text(json.dumps(dict(version=version, architecture=architecture,
         python=sys.version.split()[0], legacy=architecture == "x86", components=components), indent=2), encoding="utf-8")

@@ -28,6 +28,13 @@ try {
     $otherBinding = if ($Architecture -eq 'x86') { 'PySide6' } else { 'PySide2' }
     & $pythonExecutable -m PyInstaller --noconfirm --clean $buildMode --windowed --name NetDirector --distpath "dist/$Architecture" --workpath "build/$Architecture" --icon assets/netdirector.ico --version-file build/version_info.txt --add-data 'assets;assets' --add-data 'VERSION;.' --exclude-module $otherBinding --exclude-module PyQt5 --exclude-module PyQt6 --exclude-module "$qtBinding.QtWebEngineCore" --exclude-module "$qtBinding.QtWebEngineWidgets" --exclude-module "$qtBinding.QtQml" --exclude-module "$qtBinding.QtQuick" main.py
     if ($LASTEXITCODE -ne 0) { throw 'PyInstaller build failed.' }
+    & $pythonExecutable scripts/fetch_forcebindip.py
+    if ($LASTEXITCODE -ne 0) { throw 'ForceBindIP fetch failed.' }
+    if (-not $OneFile) {
+        $distForceBind = Join-Path $projectRoot "dist\$Architecture\NetDirector\ForceBindIP"
+        New-Item -ItemType Directory -Path $distForceBind -Force | Out-Null
+        Copy-Item -Path (Join-Path $projectRoot "build\ForceBindIP\*") -Destination $distForceBind -Force
+    }
     Write-Host "Build complete. Output: dist/$Architecture. Keep the entire NetDirector folder together."
 } finally {
     $env:PATH = $originalPath
