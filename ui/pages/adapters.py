@@ -16,7 +16,8 @@ class AdaptersPage(QWidget):
         row.addWidget(button("Adapter details", self.details))
         row.addWidget(button("Refresh networks", window.controller.refresh, True))
         layout.addLayout(row)
-        self.table = table(["Adapter", "Description", "IPv4", "Status", "Type"])
+        self.table = table(["Adapter", "Description", "IPv4", "Status", "Type"],
+                           stretch_column=1, column_widths={0: 200, 2: 160, 3: 100, 4: 110})
         self.table.doubleClicked.connect(lambda _: self.details())
         layout.addWidget(self.table)
         layout.addWidget(label("Read-only discovery. NetDirector does not modify routes, metrics, gateways, DNS, or firewall rules.", "muted"))

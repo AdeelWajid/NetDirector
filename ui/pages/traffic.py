@@ -15,7 +15,8 @@ class TrafficPage(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(label("Live adapter activity", "section"))
         layout.addWidget(label("Measured from Windows byte counters every 2.5 seconds. Totals are cumulative OS counters.", "muted"))
-        self.table = table(["Adapter", "Download", "Upload", "Received", "Sent"])
+        self.table = table(["Adapter", "Download", "Upload", "Received", "Sent"],
+                           stretch_column=0, column_widths={1: 130, 2: 130, 3: 130, 4: 130})
         layout.addWidget(self.table)
         layout.addWidget(label("Per-application bandwidth: unavailable. Socket diagnostics are provided separately; socket counts are not bandwidth measurements.", "muted"))
 

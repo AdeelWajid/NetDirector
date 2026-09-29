@@ -34,7 +34,8 @@ class ApplicationsPage(QWidget):
         empty_layout.addWidget(button("Create your first rule", window.add_rule, True), 0, Qt.AlignCenter)
         empty_layout.addStretch()
         layout.addWidget(self.empty, 1)
-        self.table = table(["Application", "Preferred network", "Current IP", "Status"])
+        self.table = table(["Application", "Preferred network", "Current IP", "Status"],
+                           stretch_column=[0, 1], column_widths={2: 160, 3: 170})
         self.table.setContextMenuPolicy(Qt.CustomContextMenu)
         self.table.customContextMenuRequested.connect(self.context_menu)
         self.table.doubleClicked.connect(lambda _: window.edit_rule())

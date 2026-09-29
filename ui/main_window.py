@@ -5,7 +5,7 @@ from qt_compat.QtCore import Qt, QTimer, QUrl
 from qt_compat.QtGui import QIcon, QDesktopServices
 from qt_compat.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QListWidget, QListWidgetItem, QStackedWidget, QComboBox, QFrame,
-                             QProgressBar, QMessageBox, QFileDialog, QSystemTrayIcon, QMenu, QStyle)
+                             QProgressBar, QMessageBox, QFileDialog, QSystemTrayIcon, QMenu, QStyle, QScrollArea)
 from models.profile import Profile
 from services.process_service import steam_path
 from utils.paths import asset
@@ -110,16 +110,33 @@ class MainWindow(QMainWindow):
         self.diagnostics = DiagnosticsPage(self)
         self.settings_page = SettingsPage(self)
         about = QWidget()
-        about_layout = QVBoxLayout(about)
+        about_outer = QVBoxLayout(about)
+        about_outer.setContentsMargins(0, 0, 0, 0)
+        about_scroll = QScrollArea()
+        about_scroll.setWidgetResizable(True)
+        about_content = QWidget()
+        about_layout = QVBoxLayout(about_content)
+        about_layout.setContentsMargins(6, 0, 24, 20)
+        about_layout.setSpacing(14)
         about_layout.addWidget(label("NetDirector", "title"))
         about_layout.addWidget(label(f"Version {VERSION} • {BINDING} • {'x86 legacy' if BINDING == 'PySide2' else 'x64'}", "muted"))
+        about_layout.addWidget(label("Developer & Project", "section"))
+        about_layout.addWidget(label("NetDirector is created and maintained by Adeel Wajid.\nOpen-source Windows network routing and application binding director."))
+        about_links = QHBoxLayout()
+        about_links.setSpacing(10)
+        about_links.addWidget(button("GitHub: @AdeelWajid", lambda: QDesktopServices.openUrl(QUrl("https://github.com/AdeelWajid")), primary=True))
+        about_links.addWidget(button("Project Repository", lambda: QDesktopServices.openUrl(QUrl("https://github.com/AdeelWajid/NetDirector"))))
+        about_links.addWidget(button("User Guide", lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(str(asset("README.md"))))))
+        about_links.addWidget(button("ForceBindIP Docs", lambda: QDesktopServices.openUrl(QUrl("https://r1ch.net/projects/forcebindip"))))
+        about_links.addStretch()
+        about_layout.addLayout(about_links)
         about_layout.addWidget(label("Profiles remember your adapters, not yesterday's IP addresses.", "section"))
         about_layout.addWidget(label("NetDirector discovers current interfaces before startup activation and again before every launch. It never changes global routing, adapter metrics, DNS, or firewall settings."))
         about_layout.addWidget(label("Backend capabilities", "section"))
         about_layout.addWidget(label("ForceBindIP: launch-time IPv4 binding for compatible x86 / x64 applications. Existing processes cannot be rebound. Child binding, modern Chrome support, IPv6 enforcement, and VPN leak prevention are not guaranteed. BindIP and native backends are extension points, not implemented engines."))
-        about_layout.addWidget(button("ForceBindIP documentation", lambda: QDesktopServices.openUrl(QUrl("https://r1ch.net/projects/forcebindip"))))
-        about_layout.addWidget(button("Open user guide", lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(str(asset("README.md"))))))
         about_layout.addStretch()
+        about_scroll.setWidget(about_content)
+        about_outer.addWidget(about_scroll)
         self.pages = [self.dashboard, self.applications, self.profile_page, self.adapter_page,
                       self.traffic_page, self.diagnostics, self.settings_page, about]
         for page in self.pages:

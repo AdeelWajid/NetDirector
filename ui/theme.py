@@ -78,9 +78,9 @@ def apply_theme(app, choice="system", compact=False):
         QLineEdit, QComboBox, QSpinBox, QTextEdit, QPlainTextEdit {{ background: {card}; border: 1px solid {border}; border-radius: 8px; padding: 9px; selection-background-color: #a774ce; }}
         QComboBox::drop-down {{ border: none; width: 25px; }}
         QComboBox QAbstractItemView {{ background: {card}; selection-background-color: {hover}; }}
-        QTableWidget {{ background: {card}; alternate-background-color: {card_end}; border: 1px solid {border}; border-radius: 12px; gridline-color: {border}; selection-background-color: {hover}; selection-color: {text}; }}
-        QHeaderView::section {{ background: {card}; color: {muted}; padding: 12px 8px; border: none; border-bottom: 1px solid {border}; font-weight: 400; }}
-        QTableWidget::item {{ padding: 8px; border-bottom: 1px solid {border}; }}
+        QTableWidget {{ background: {card}; alternate-background-color: {card_end}; border: 1px solid {border}; border-radius: 12px; gridline-color: {border}; selection-background-color: {hover}; selection-color: {text}; outline: none; }}
+        QHeaderView::section {{ background: {card}; color: {muted}; padding: 10px 14px; border: none; border-bottom: 1px solid {border}; font-weight: 600; text-align: left; }}
+        QTableWidget::item {{ padding: 10px 14px; border-bottom: 1px solid {border}; }}
         QScrollArea, QScrollArea > QWidget > QWidget {{ border: none; background: transparent; }}
         QScrollBar:vertical {{ width: 7px; background: transparent; margin: 0; }}
         QScrollBar::handle:vertical {{ background: {border}; border-radius: 3px; min-height: 30px; }}

@@ -14,7 +14,8 @@ class ProfilesPage(QWidget):
         row.addWidget(button("Import…", window.import_profile))
         row.addWidget(button("Create profile", window.create_profile, True))
         layout.addLayout(row)
-        self.table = table(["Profile", "Description", "Applications", "Startup", "State"])
+        self.table = table(["Profile", "Description", "Applications", "Startup", "State"],
+                           stretch_column=1, column_widths={0: 170, 2: 120, 3: 110, 4: 110})
         layout.addWidget(self.table)
         row = QHBoxLayout()
         for text, callback in [("Activate", self.activate), ("Edit / rename", window.edit_profile),

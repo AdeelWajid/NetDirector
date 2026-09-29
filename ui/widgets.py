@@ -29,7 +29,7 @@ def card(title, value, detail):
     return frame
 
 
-def table(headers):
+def table(headers, stretch_column=None, column_widths=None):
     widget = QTableWidget(0, len(headers))
     widget.setHorizontalHeaderLabels(headers)
     widget.verticalHeader().hide()
@@ -37,8 +37,22 @@ def table(headers):
     widget.setSelectionBehavior(QAbstractItemView.SelectRows)
     widget.setSelectionMode(QAbstractItemView.SingleSelection)
     widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
-    widget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-    widget.verticalHeader().setDefaultSectionSize(58)
+    header = widget.horizontalHeader()
+    header.setDefaultAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+    header.setHighlightSections(False)
+    widget.verticalHeader().setDefaultSectionSize(48)
+    if stretch_column is not None or column_widths is not None:
+        header.setSectionResizeMode(QHeaderView.Interactive)
+        if isinstance(stretch_column, (list, tuple)):
+            for col in stretch_column:
+                header.setSectionResizeMode(col, QHeaderView.Stretch)
+        elif stretch_column is not None:
+            header.setSectionResizeMode(stretch_column, QHeaderView.Stretch)
+        if column_widths:
+            for col, width in column_widths.items():
+                widget.setColumnWidth(col, width)
+    else:
+        header.setSectionResizeMode(QHeaderView.Stretch)
     return widget
 
 
@@ -55,12 +69,15 @@ def set_rows(widget, rows):
                 if item is None:
                     item = QTableWidgetItem(text_str)
                     item.setToolTip(text_str)
+                    item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
                     widget.setItem(i, j, item)
                 else:
                     if item.text() != text_str:
                         item.setText(text_str)
                     if item.toolTip() != text_str:
                         item.setToolTip(text_str)
+                    if item.textAlignment() != (Qt.AlignLeft | Qt.AlignVCenter):
+                        item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         if 0 <= selected < len(rows):
             if widget.currentRow() != selected:
                 widget.selectRow(selected)

@@ -20,7 +20,8 @@ class DiagnosticsPage(QWidget):
         self.summary = label("Select an application to inspect its processes and local addresses.", "muted")
         layout.addWidget(self.summary)
         self.tabs = QTabWidget()
-        self.table = table(["Process", "PID", "Local address", "Socket status", "Observation"])
+        self.table = table(["Process", "PID", "Local address", "Socket status", "Observation"],
+                           stretch_column=4, column_widths={0: 180, 1: 85, 2: 180, 3: 130})
         self.tabs.addTab(self.table, "Connections & child processes")
         self.logs = QPlainTextEdit()
         self.logs.setReadOnly(True)
