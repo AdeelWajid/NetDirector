@@ -28,6 +28,41 @@ ConvertTo-Json -InputObject $result -Depth 5 -Compress
 '''
 
 
+import socket
+import re
+
+
+def get_connected_wifi_ssid():
+    """Extract the currently connected Wi-Fi SSID if available."""
+    try:
+        flags = subprocess.CREATE_NO_WINDOW if hasattr(subprocess, "CREATE_NO_WINDOW") else 0
+        out = subprocess.check_output(["netsh", "wlan", "show", "interfaces"],
+                                      encoding="utf-8", errors="ignore",
+                                      creationflags=flags)
+        match = re.search(r"^\s*SSID\s*:\s*(.+)$", out, re.MULTILINE)
+        if match:
+            return match.group(1).strip()
+    except Exception:
+        pass
+    return ""
+
+
+def check_adapter_internet(ip, timeout=0.8):
+    """Test outbound internet reachability through a specific local IP."""
+    if not ip:
+        return False
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.settimeout(timeout)
+        s.bind((ip, 0))
+        s.connect(("1.1.1.1", 53))
+        s.send(b"\x00")
+        s.close()
+        return True
+    except Exception:
+        return False
+
+
 def parse_adapters(raw):
     rows = json.loads(raw.lstrip("\ufeff"))
     if isinstance(rows, dict):
@@ -38,9 +73,14 @@ def parse_adapters(raw):
                                       for k in AdapterIdentity.__dataclass_fields__})
         ipv4 = [ip for ip in row.get("ipv4", []) if not ipaddress.ip_address(ip).is_link_local
                 and not ipaddress.ip_address(ip).is_loopback]
+        status = row.get("status") or "Unknown"
+        has_internet = False
+        if ipv4 and status.lower() == "up":
+            has_internet = check_adapter_internet(ipv4[0])
         result.append(Adapter(identity, ipv4, row.get("ipv6") or [], row.get("gateways") or [],
-                              row.get("dns") or [], row.get("status") or "Unknown",
-                              row.get("kind") or "Virtual / other", row.get("link_speed") or ""))
+                              row.get("dns") or [], status,
+                              row.get("kind") or "Virtual / other", row.get("link_speed") or "",
+                              has_internet=has_internet))
     return result
 
 

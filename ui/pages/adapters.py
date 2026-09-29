@@ -25,14 +25,28 @@ class AdaptersPage(QWidget):
 
     def refresh(self):
         self.visible_adapters = [a for a in self.window.controller.adapters if self.show_all.isChecked() or a.available]
-        set_rows(self.table, [(a.identity.name, a.identity.description, ", ".join(a.ipv4) or "—", a.status, a.kind) for a in self.visible_adapters])
+        ssid = getattr(self.window.controller, "current_ssid", "")
+        def status_label(a):
+            if a.available:
+                return "Online (Internet)" if getattr(a, "has_internet", False) else "Connected (LAN)"
+            return a.status
+        def kind_label(a):
+            if ssid and ("wi-fi" in a.identity.name.lower() or "wireless" in a.identity.description.lower()):
+                return f"Wi-Fi • {ssid}"
+            return a.kind
+
+        set_rows(self.table, [(a.identity.name, a.identity.description, ", ".join(a.ipv4) or "—",
+                               status_label(a), kind_label(a)) for a in self.visible_adapters])
 
     def details(self):
         index = self.table.currentRow()
         if not 0 <= index < len(self.visible_adapters):
             return
         a = self.visible_adapters[index]
-        text = "\n".join([f"Description: {a.identity.description}", f"Status: {a.status}", f"Type: {a.kind}",
+        text = "\n".join([f"Description: {a.identity.description}",
+                          f"Status: {a.status}",
+                          f"Internet reachability: {'Reachable' if getattr(a, 'has_internet', False) else 'Local network only'}",
+                          f"Type: {a.kind}",
                           f"IPv4: {', '.join(a.ipv4) or 'None'}", f"IPv6: {', '.join(a.ipv6) or 'None'}",
                           f"Gateways: {', '.join(a.gateways) or 'None'}", f"DNS: {', '.join(a.dns) or 'None'}",
                           f"MAC: {a.identity.mac}", f"GUID: {a.identity.guid}", f"Index: {a.identity.index}",

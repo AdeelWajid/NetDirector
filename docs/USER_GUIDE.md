@@ -10,15 +10,19 @@ Dashboard rates are the sum of measured available-adapter counters, not per-proc
 
 ## What works
 
-- Live Windows adapter discovery: GUID, index, MAC, description, IPv4/IPv6, gateways, DNS, status and link information.
+- Live Windows adapter discovery: GUID, index, MAC, description, IPv4/IPv6, gateways, DNS, status, link speed, and outbound internet reachability testing.
 - Conservative identity matching across renames and DHCP changes. A reused interface index or duplicate friendly name cannot silently select another device.
 - Application rules, executable icons, drag-and-drop `.exe` files, arguments, working directories, enable/disable, auto-launch, and fallback choices.
-- Profile creation, editing, duplication, import/export, deletion, activation, and one startup profile.
-- ForceBindIP integration with automatic x86/x64 executable detection, safe argument parsing, backend detection and configurable location.
+- Running application picker: choose from active GUI windows with system icons in one click.
+- Game library auto-discovery across multi-drive Steam and Epic Games installations.
+- Profile creation, editing, duplication, import/export, deletion, activation, Wi-Fi SSID auto-triggering, and startup profile selection.
+- System tray quick switcher to activate profiles with one click.
+- Headless CLI commands (`--list-profiles`, `--list-adapters`, `--activate-profile`).
+- ForceBindIP integration with automatic x86/x64 executable detection, safe argument parsing, backend detection, and bundled binaries.
 - Serial background jobs keep discovery, launching, process inspection and traffic sampling off the UI thread.
 - Windows startup registration for the current user, tray controls, launch-minimized, saved appearance, light/dark/system themes.
 - Actual adapter byte counters, observed process trees, socket-local-address diagnostics and rotating logs.
-- Folder-based standalone Windows packaging with app icon/version metadata; optional one-file packaging.
+- Folder-based standalone Windows packaging with app icon/version metadata, Inno Setup installer, and offline bundling.
 
 This is a **launch-time routing manager**, not a traffic isolation system. Profile activation prepares rules and launches only enabled rules with auto-launch selected. It does not intercept every application started outside NetDirector. Pausing cancels pending launches; already-running programs retain their injected binding until closed. Changing a rule or receiving a new DHCP address does not rebind an existing process.
 
@@ -36,15 +40,13 @@ Regenerate public-safe previews with `python scripts/capture_ui.py`. Use `--live
 - Windows 10 or Windows 11 x64 (recommended), or the legacy x86 build for 32-bit Windows 10. The x64 app can launch both 32-bit and 64-bit targets.
 - For source development: Python 3.11 or newer; Python 3.12 is used for the supplied build.
 - Windows PowerShell and the standard NetTCPIP/NetAdapter modules (included with supported Windows installations).
-- ForceBindIP installed separately for selected-adapter launches. Automatic / Windows default launches do not require it.
+- ForceBindIP is bundled with official installers and packages. Custom paths can be configured in Settings.
 
 No system-wide network changes or administrative startup registration are required. Some protected processes deny socket inspection; diagnostics reports that limitation instead of silently elevating the whole app.
 
 ## Install and run the standalone build
 
-Copy the **entire** `dist/x64/NetDirector` directory to a location of your choice and run `NetDirector.exe`. Keep `_internal` beside the executable. Python does not need to be installed. Do not move only the `.exe` from a folder build.
-
-The executable is unsigned. No third-party binding binaries are bundled. Configuration is saved under `%LOCALAPPDATA%\NetDirector`, so the app works from read-only install locations.
+Download the installer (`NetDirector-*-windows-x64-Setup.exe`) or extract the portable ZIP. Keep `_internal` and `ForceBindIP` beside the executable if running portable. Python does not need to be installed. Configuration is saved under `%LOCALAPPDATA%\NetDirector`, so the app works from read-only install locations.
 
 ## Development setup
 

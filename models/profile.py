@@ -15,6 +15,7 @@ class Profile:
     description: str = ""
     rules: list[ApplicationRule] = field(default_factory=list)
     startup: bool = False
+    wifi_ssid: str = ""
     id: str = field(default_factory=lambda: str(uuid4()))
     created: str = field(default_factory=now)
     modified: str = field(default_factory=now)

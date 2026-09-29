@@ -15,6 +15,7 @@ class ApplicationsPage(QWidget):
         row = QHBoxLayout()
         row.addWidget(label("Applications in this profile", "section"))
         row.addStretch()
+        row.addWidget(button("Scan games…", self.discover_games))
         row.addWidget(button("Add Steam", window.add_steam))
         row.addWidget(button("Add application", window.add_rule, True))
         layout.addLayout(row)
@@ -91,3 +92,9 @@ class ApplicationsPage(QWidget):
             if url.isLocalFile() and url.toLocalFile().lower().endswith(".exe"):
                 self.window.add_rule(executable=url.toLocalFile())
         event.acceptProposedAction()
+
+    def discover_games(self):
+        from ui.dialogs import GamePickerDialog
+        dialog = GamePickerDialog(self)
+        if dialog.exec() and dialog.selected_game:
+            self.window.add_rule(executable=dialog.selected_game["executable"])

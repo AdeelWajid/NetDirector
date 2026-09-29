@@ -33,6 +33,7 @@ class Adapter:
     status: str = "Unknown"
     kind: str = "Network"
     link_speed: str = ""
+    has_internet: bool = False
 
     @property
     def available(self):

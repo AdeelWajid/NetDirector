@@ -14,8 +14,8 @@ class ProfilesPage(QWidget):
         row.addWidget(button("Import…", window.import_profile))
         row.addWidget(button("Create profile", window.create_profile, True))
         layout.addLayout(row)
-        self.table = table(["Profile", "Description", "Applications", "Startup", "State"],
-                           stretch_column=1, column_widths={0: 170, 2: 120, 3: 110, 4: 110})
+        self.table = table(["Profile", "Description", "Applications", "Auto-trigger", "State"],
+                           stretch_column=1, column_widths={0: 170, 2: 120, 3: 130, 4: 100})
         layout.addWidget(self.table)
         row = QHBoxLayout()
         for text, callback in [("Activate", self.activate), ("Edit / rename", window.edit_profile),
@@ -23,7 +23,7 @@ class ProfilesPage(QWidget):
             row.addWidget(button(text, callback))
         row.addStretch()
         layout.addLayout(row)
-        layout.addWidget(label("One startup profile at a time. Imported profiles have automatic launch disabled until you enable it.", "muted"))
+        layout.addWidget(label("Profiles can activate at startup or automatically switch when connecting to a designated Wi-Fi network.", "muted"))
 
     def selected(self):
         index = self.table.currentRow()
@@ -36,5 +36,13 @@ class ProfilesPage(QWidget):
             self.window.activate_selected()
 
     def refresh(self):
-        set_rows(self.table, [(p.name, p.description or "—", len(p.rules), "Enabled" if p.startup else "—",
+        def trigger_text(p):
+            triggers = []
+            if p.startup:
+                triggers.append("Startup")
+            if p.wifi_ssid:
+                triggers.append(f"Wi-Fi ({p.wifi_ssid})")
+            return ", ".join(triggers) or "—"
+
+        set_rows(self.table, [(p.name, p.description or "—", len(p.rules), trigger_text(p),
                                "Active" if p.id == self.window.controller.active_profile else "Inactive") for p in self.window.profiles])

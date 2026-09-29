@@ -48,6 +48,7 @@ class Controller(QObject):
         self.sessions = {}
         self.traffic = {}
         self.active_profile = None
+        self.current_ssid = ""
         self.ready = False
         self.startup_done = False
         self.busy = False
@@ -141,6 +142,18 @@ class Controller(QObject):
             if profile:
                 self.activate(profile)
             self.discovery_finished.emit()
+        try:
+            from services.windows_network import get_connected_wifi_ssid
+            ssid = get_connected_wifi_ssid()
+            self.current_ssid = ssid
+            if ssid:
+                matched = next((p for p in self.profiles if p.wifi_ssid and p.wifi_ssid.strip().lower() == ssid.lower()), None)
+                if matched and self.active_profile != matched.id:
+                    self.log(f"Connected to Wi-Fi '{ssid}': auto-activating profile '{matched.name}'")
+                    self.activate(matched)
+                    self.notice.emit(f"Switched to '{matched.name}' profile (connected to Wi-Fi: {ssid})")
+        except Exception:
+            pass
         for key, (rule, generation) in list(self.pending.items()):
             if generation != self.generation:
                 self.pending.pop(key, None)

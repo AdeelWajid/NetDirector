@@ -205,6 +205,7 @@ class MainWindow(QMainWindow):
         if hasattr(self, "tray_profile"):
             active = next((p.name for p in self.profiles if p.id == self.controller.active_profile), "None")
             self.tray_profile.setText("Current profile: " + active)
+            self.rebuild_tray_profiles()
 
     def notify(self, message):
         self.statusBar().showMessage(message, 12000)
@@ -311,7 +312,13 @@ class MainWindow(QMainWindow):
     def create_profile(self):
         dialog = ProfileDialog(parent=self)
         if dialog.exec():
-            profile = Profile(dialog.name.text().strip(), dialog.description.text().strip(), startup=dialog.startup.isChecked())
+            ssid = dialog.wifi_ssid.currentData()
+            if not ssid:
+                ssid = dialog.wifi_ssid.currentText().strip()
+                if "none" in ssid.lower():
+                    ssid = ""
+            profile = Profile(dialog.name.text().strip(), dialog.description.text().strip(),
+                              startup=dialog.startup.isChecked(), wifi_ssid=ssid)
             self.save_profile_details(profile)
 
     def edit_profile(self):
@@ -320,8 +327,14 @@ class MainWindow(QMainWindow):
             return
         dialog = ProfileDialog(profile, self)
         if dialog.exec():
+            ssid = dialog.wifi_ssid.currentData()
+            if not ssid:
+                ssid = dialog.wifi_ssid.currentText().strip()
+                if "none" in ssid.lower():
+                    ssid = ""
             updated = copy.deepcopy(profile)
             updated.name, updated.description, updated.startup = dialog.name.text().strip(), dialog.description.text().strip(), dialog.startup.isChecked()
+            updated.wifi_ssid = ssid
             self.save_profile_details(updated)
 
     def save_profile_details(self, profile):
@@ -380,6 +393,8 @@ class MainWindow(QMainWindow):
         menu.addAction("Open NetDirector", self.open_window)
         self.tray_profile = menu.addAction("Current profile: None")
         self.tray_profile.setEnabled(False)
+        self.tray_profiles_menu = menu.addMenu("Switch profile")
+        self.rebuild_tray_profiles()
         menu.addSeparator()
         menu.addAction("Activate selected profile", self.activate_selected)
         menu.addAction("Pause bindings / automatic launches", lambda: self.safe(self.controller.deactivate))
@@ -391,6 +406,22 @@ class MainWindow(QMainWindow):
         self.tray.activated.connect(lambda reason: self.open_window() if reason in (QSystemTrayIcon.Trigger, QSystemTrayIcon.DoubleClick) else None)
         if QSystemTrayIcon.isSystemTrayAvailable():
             self.tray.show()
+
+    def rebuild_tray_profiles(self):
+        if not hasattr(self, "tray_profiles_menu"):
+            return
+        self.tray_profiles_menu.clear()
+        for p in self.profiles:
+            action = self.tray_profiles_menu.addAction(p.name)
+            action.setCheckable(True)
+            action.setChecked(p.id == self.controller.active_profile)
+            action.triggered.connect(lambda checked=False, pid=p.id: self.switch_profile_by_id(pid))
+
+    def switch_profile_by_id(self, profile_id):
+        idx = self.profile_combo.findData(profile_id)
+        if idx >= 0:
+            self.profile_combo.setCurrentIndex(idx)
+            self.activate_selected()
 
     def open_window(self):
         self.showNormal()

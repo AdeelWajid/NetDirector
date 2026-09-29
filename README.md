@@ -39,12 +39,15 @@ Python and ForceBindIP binaries are included. Builds are unsigned. Each release 
 ## Features
 
 - **Application rules:** browse or drag in `.exe` files, choose adapters, arguments, working directories, and fallback behavior.
-- **Profiles:** create, duplicate, import/export, activate, and select a startup profile.
-- **Dynamic discovery:** adapter GUID/MAC matching survives renames and DHCP address changes without reusing a saved IP.
+- **Running applications picker:** select from active running desktop programs with icons and window titles in 1 click.
+- **Installed games scanner:** automatically discover games installed across multi-drive Steam and Epic Games libraries.
+- **Profiles & Wi-Fi auto-switching:** create, duplicate, import/export profiles, and optionally trigger profile activation automatically upon connecting to a specific Wi-Fi SSID.
+- **Dynamic discovery & internet probing:** adapter GUID/MAC matching survives DHCP changes; live socket probes verify internet reachability vs local-only connections.
 - **Safe fallback choices:** block launch, use Windows default, ask, or wait for the adapter.
-- **Dashboard:** live adapter traffic, available connections, profile controls, and action tiles.
-- **Diagnostics:** observe application/child processes and their socket-local addresses; flag addresses that differ from the launch IP.
-- **Windows integration:** system tray, optional start with Windows, launch minimized, and light/dark/system appearance.
+- **Dashboard & Traffic monitor:** live per-adapter throughput meters, connection health, and quick actions.
+- **Diagnostics:** observe application/child processes, socket-local addresses, and flag address mismatches.
+- **Windows integration:** system tray with 1-click profile switching, optional start with Windows, launch minimized, and light/dark/system appearance.
+- **Headless CLI:** query profiles, adapters, and activate configurations via command line (`--list-profiles`, `--list-adapters`, `--activate-profile <name>`).
 - **Local storage:** JSON configuration and rotating logs; no telemetry. No global routes, DNS, metrics, gateways, or firewall rules are changed.
 
 <details>
@@ -157,8 +160,14 @@ logs/netdirector.log
 
 Set `NETDIRECTOR_DATA_DIR` for isolated testing or portable data. Keep that directory out of Git. Imported profiles have automatic startup/launch disabled until reviewed. `.gitignore` excludes build outputs, local data, logs, credentials, and live screenshots; public documentation screenshots use example addresses.
 
+## Author & Maintainer
+
+**Adeel Wajid**
+- **GitHub:** [@AdeelWajid](https://github.com/AdeelWajid)
+- **Repository:** [AdeelWajid/NetDirector](https://github.com/AdeelWajid/NetDirector)
+
 ## Contributing and license
 
 Issues and pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md), keep routing logic separate from the UI, and test both runtimes when changing Qt code.
 
-NetDirector's own code is available under the [MIT License](LICENSE). Dependencies retain their own licenses; see [third-party notices](THIRD_PARTY_NOTICES.md). ForceBindIP is not bundled.
+NetDirector's own code is available under the [MIT License](LICENSE). Dependencies retain their own licenses; see [third-party notices](THIRD_PARTY_NOTICES.md). Official releases and installers include ForceBindIP binaries for out-of-the-box operation.
